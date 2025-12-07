@@ -17,7 +17,8 @@ const Index = () => {
       name: 'Одна роза',
       price: '450₽',
       description: 'Элегантный жест внимания',
-      features: ['Свежая роза премиум-класса', 'Изысканная упаковка', 'Персональная открытка']
+      features: ['Свежая роза премиум-класса', 'Изысканная упаковка', 'Персональная открытка'],
+      image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80'
     },
     {
       id: 2,
@@ -26,7 +27,8 @@ const Index = () => {
       price: '19 900₽',
       description: 'Роскошное признание в любви',
       features: ['101 роза эксклюзивного качества', 'Премиальная упаковка', 'Доставка в течение 2 часов', 'Фото букета перед отправкой'],
-      popular: true
+      popular: true,
+      image: 'https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=800&q=80'
     },
     {
       id: 3,
@@ -34,7 +36,8 @@ const Index = () => {
       name: '1001 роза',
       price: '149 000₽',
       description: 'Незабываемое впечатление',
-      features: ['1001 роза высшего качества', 'Эксклюзивное оформление', 'VIP доставка', 'Фотограф в подарок', 'Персональный флорист']
+      features: ['1001 роза высшего качества', 'Эксклюзивное оформление', 'VIP доставка', 'Фотограф в подарок', 'Персональный флорист'],
+      image: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=800&q=80'
     }
   ];
 
@@ -120,10 +123,17 @@ const Index = () => {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {bouquet.popular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground">
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground z-10">
                     Популярное
                   </Badge>
                 )}
+                <div className="aspect-[4/3] overflow-hidden rounded-t-lg">
+                  <img 
+                    src={bouquet.image} 
+                    alt={bouquet.name}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
                 <CardHeader className="text-center pb-4">
                   <div className="text-6xl font-bold text-primary mb-2">{bouquet.count}</div>
                   <CardTitle className="text-3xl mb-2">{bouquet.name}</CardTitle>
