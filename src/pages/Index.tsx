@@ -352,13 +352,45 @@ const Index = () => {
                   <label className="text-sm font-medium">Email</label>
                   <Input type="email" placeholder="example@mail.ru" required />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Адрес доставки</label>
-                  <Textarea placeholder="Улица, дом, квартира" rows={3} required />
+                <div className="space-y-4 p-6 bg-muted/30 rounded-lg border border-border">
+                  <h3 className="text-lg font-semibold text-primary">Детали доставки</h3>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Адрес доставки</label>
+                    <Input placeholder="Улица" required />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Дом</label>
+                      <Input placeholder="№" required />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Квартира/Офис</label>
+                      <Input placeholder="№" />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Дата доставки</label>
+                      <Input type="date" required min={new Date().toISOString().split('T')[0]} />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Время доставки</label>
+                      <Input type="time" required />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Подъезд, этаж, домофон</label>
+                    <Input placeholder="Подробности для курьера" />
+                  </div>
                 </div>
+                
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Комментарий к заказу</label>
-                  <Textarea placeholder="Особые пожелания, время доставки" rows={3} />
+                  <Textarea placeholder="Особые пожелания, текст для открытки" rows={3} />
                 </div>
                 <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 text-lg">
                   Оформить заказ с онлайн-оплатой
