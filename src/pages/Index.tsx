@@ -18,7 +18,7 @@ const Index = () => {
       price: '450₽',
       description: 'Элегантный жест внимания',
       features: ['Свежая роза премиум-класса', 'Изысканная упаковка', 'Персональная открытка'],
-      image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80'
+      image: 'https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?w=800&q=80'
     },
     {
       id: 2,
