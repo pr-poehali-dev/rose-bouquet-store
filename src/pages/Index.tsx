@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,8 +7,37 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
+interface Order {
+  id: string;
+  bouquetId: number;
+  bouquetName: string;
+  price: string;
+  customerName: string;
+  phone: string;
+  email: string;
+  address: string;
+  house: string;
+  apartment: string;
+  date: string;
+  time: string;
+  details: string;
+  comment: string;
+  paymentMethod: 'online' | 'cash';
+  createdAt: string;
+}
+
 const Index = () => {
   const [selectedBouquet, setSelectedBouquet] = useState<number | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    const savedOrders = localStorage.getItem('roseluxe_orders');
+    if (savedOrders) {
+      setOrders(JSON.parse(savedOrders));
+    }
+  }, []);
 
   const bouquets = [
     {
@@ -64,7 +93,43 @@ const Index = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Заказ принят! Мы свяжемся с вами в ближайшее время.');
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    const selectedBouquetData = bouquets.find(b => b.id === selectedBouquet);
+    if (!selectedBouquetData) return;
+
+    const newOrder: Order = {
+      id: Date.now().toString(),
+      bouquetId: selectedBouquet!,
+      bouquetName: selectedBouquetData.name,
+      price: selectedBouquetData.price,
+      customerName: formData.get('name') as string,
+      phone: formData.get('phone') as string,
+      email: formData.get('email') as string,
+      address: formData.get('address') as string,
+      house: formData.get('house') as string,
+      apartment: formData.get('apartment') as string,
+      date: formData.get('date') as string,
+      time: formData.get('time') as string,
+      details: formData.get('details') as string,
+      comment: formData.get('comment') as string,
+      paymentMethod: paymentMethod,
+      createdAt: new Date().toISOString()
+    };
+
+    const updatedOrders = [...orders, newOrder];
+    setOrders(updatedOrders);
+    localStorage.setItem('roseluxe_orders', JSON.stringify(updatedOrders));
+
+    toast.success(
+      paymentMethod === 'online' 
+        ? 'Заказ оформлен! Переход к оплате...'
+        : 'Заказ принят! Мы свяжемся с вами для подтверждения.'
+    );
+
+    (e.target as HTMLFormElement).reset();
+    setSelectedBouquet(null);
+    setPaymentMethod('online');
   };
 
   return (
@@ -80,12 +145,107 @@ const Index = () => {
             <a href="#reviews" className="text-foreground hover:text-primary transition-colors">Отзывы</a>
             <a href="#contacts" className="text-foreground hover:text-primary transition-colors">Контакты</a>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
-            <Icon name="Phone" size={18} className="mr-2" />
-            +7 (495) 123-45-67
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowHistory(!showHistory)}
+              className="relative"
+            >
+              <Icon name="History" size={18} className="mr-2" />
+              Мои заказы
+              {orders.length > 0 && (
+                <Badge className="absolute -top-2 -right-2 bg-secondary text-secondary-foreground px-2 py-0.5 text-xs">
+                  {orders.length}
+                </Badge>
+              )}
+            </Button>
+            <Button className="bg-primary hover:bg-primary/90">
+              <Icon name="Phone" size={18} className="mr-2" />
+              +7 (495) 123-45-67
+            </Button>
+          </div>
         </nav>
       </header>
+
+      {showHistory && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowHistory(false)}>
+          <Card className="max-w-4xl w-full max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-3xl">История заказов</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setShowHistory(false)}>
+                  <Icon name="X" size={24} />
+                </Button>
+              </div>
+              <CardDescription>Всего заказов: {orders.length}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {orders.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Icon name="ShoppingBag" size={48} className="mx-auto mb-4 opacity-30" />
+                  <p>У вас пока нет заказов</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {orders.slice().reverse().map((order) => (
+                    <Card key={order.id} className="border-2">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-xl">{order.bouquetName}</CardTitle>
+                            <CardDescription className="mt-1">
+                              {new Date(order.createdAt).toLocaleDateString('ru-RU', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </CardDescription>
+                          </div>
+                          <Badge className={order.paymentMethod === 'online' ? 'bg-primary' : 'bg-secondary'}>
+                            {order.paymentMethod === 'online' ? 'Онлайн оплата' : 'Наличными'}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-muted-foreground">Клиент:</span>
+                            <p className="font-medium">{order.customerName}</p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Телефон:</span>
+                            <p className="font-medium">{order.phone}</p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Доставка:</span>
+                            <p className="font-medium">{order.date} в {order.time}</p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Цена:</span>
+                            <p className="font-medium text-primary text-lg">{order.price}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Адрес:</span>
+                          <p className="font-medium">{order.address}, д. {order.house}{order.apartment ? `, кв. ${order.apartment}` : ''}</p>
+                        </div>
+                        {order.comment && (
+                          <div>
+                            <span className="text-muted-foreground">Комментарий:</span>
+                            <p className="font-medium">{order.comment}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto text-center max-w-4xl animate-fade-in">
@@ -342,58 +502,85 @@ const Index = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Ваше имя</label>
-                  <Input placeholder="Иван Иванов" required />
+                  <Input name="name" placeholder="Иван Иванов" required />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Телефон</label>
-                  <Input type="tel" placeholder="+7 (999) 123-45-67" required />
+                  <Input name="phone" type="tel" placeholder="+7 (999) 123-45-67" required />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email</label>
-                  <Input type="email" placeholder="example@mail.ru" required />
+                  <Input name="email" type="email" placeholder="example@mail.ru" required />
                 </div>
                 <div className="space-y-4 p-6 bg-muted/30 rounded-lg border border-border">
                   <h3 className="text-lg font-semibold text-primary">Детали доставки</h3>
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Адрес доставки</label>
-                    <Input placeholder="Улица" required />
+                    <Input name="address" placeholder="Улица" required />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Дом</label>
-                      <Input placeholder="№" required />
+                      <Input name="house" placeholder="№" required />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Квартира/Офис</label>
-                      <Input placeholder="№" />
+                      <Input name="apartment" placeholder="№" />
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Дата доставки</label>
-                      <Input type="date" required min={new Date().toISOString().split('T')[0]} />
+                      <Input name="date" type="date" required min={new Date().toISOString().split('T')[0]} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Время доставки</label>
-                      <Input type="time" required />
+                      <Input name="time" type="time" required />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Подъезд, этаж, домофон</label>
-                    <Input placeholder="Подробности для курьера" />
+                    <Input name="details" placeholder="Подробности для курьера" />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Комментарий к заказу</label>
-                  <Textarea placeholder="Особые пожелания, текст для открытки" rows={3} />
+                  <Textarea name="comment" placeholder="Особые пожелания, текст для открытки" rows={3} />
                 </div>
+
+                <div className="space-y-4 p-6 bg-muted/30 rounded-lg border border-border">
+                  <h3 className="text-lg font-semibold text-primary">Способ оплаты</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Card 
+                      className={`cursor-pointer transition-all ${paymentMethod === 'online' ? 'border-primary border-2 bg-primary/5' : 'hover:border-primary/50'}`}
+                      onClick={() => setPaymentMethod('online')}
+                    >
+                      <CardContent className="p-6 text-center">
+                        <Icon name="CreditCard" size={32} className={`mx-auto mb-3 ${paymentMethod === 'online' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <h4 className="font-semibold mb-1">Картой онлайн</h4>
+                        <p className="text-xs text-muted-foreground">Безопасная оплата</p>
+                      </CardContent>
+                    </Card>
+                    <Card 
+                      className={`cursor-pointer transition-all ${paymentMethod === 'cash' ? 'border-primary border-2 bg-primary/5' : 'hover:border-primary/50'}`}
+                      onClick={() => setPaymentMethod('cash')}
+                    >
+                      <CardContent className="p-6 text-center">
+                        <Icon name="Banknote" size={32} className={`mx-auto mb-3 ${paymentMethod === 'cash' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <h4 className="font-semibold mb-1">Наличными</h4>
+                        <p className="text-xs text-muted-foreground">Оплата курьеру</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
                 <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 text-lg">
-                  Оформить заказ с онлайн-оплатой
+                  {paymentMethod === 'online' ? 'Перейти к оплате' : 'Оформить заказ'}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
                   После отправки формы с вами свяжется менеджер для подтверждения и оплаты
